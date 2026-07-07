@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PromptForge — Free AI Prompt Toolbox</title>
+<meta name="description" content="PromptForge is a 100% free, offline-first toolbox to generate, optimize, chain, and discover great AI prompts." />
+
+<!-- Favicon (inline SVG, no external request) -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>" />
+
+<!-- Tailwind CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    darkMode: 'class',
+    theme: {
+      extend: {
+        colors: {
+          brand: {
+            50: '#eef2ff', 100: '#e0e7ff', 200: '#c7d2fe', 300: '#a5b4fc',
+            400: '#818cf8', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca',
+            800: '#3730a3', 900: '#312e81'
+          }
+        },
+        fontFamily: {
+          sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif']
+        },
+        animation: {
+          'fade-in': 'fadeIn .4s ease-out',
+          'glow': 'glow 6s ease-in-out infinite',
+        },
+        keyframes: {
+          fadeIn: { '0%': { opacity: 0, transform: 'translateY(6px)' }, '100%': { opacity: 1, transform: 'translateY(0)' } },
+          glow: { '0%,100%': { opacity: .55 }, '50%': { opacity: 1 } },
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  html { scroll-behavior: smooth; }
+  body { font-feature-settings: "ss01"; }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #6366f1aa; border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+
+  /* Gradient text */
+  .grad-text {
+    background: linear-gradient(90deg, #818cf8, #c084fc, #22d3ee);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Ambient glow blobs */
+  .blob {
+    position: absolute; border-radius: 9999px; filter: blur(90px);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* Accordion */
+  .accordion-content { max-height: 0; overflow: hidden; transition: max-height .35s ease; }
+  .accordion-item.open .accordion-content { max-height: 600px; }
+  .accordion-item.open .chevron { transform: rotate(180deg); }
+  .chevron { transition: transform .25s ease; }
+
+  /* Toast */
+  #toast { transition: opacity .25s ease, transform .25s ease; }
+
+  /* Card hover lift */
+  .lift { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+  .lift:hover { transform: translateY(-3px); }
+
+  /* Chat bubbles */
+  .msg-user { background: linear-gradient(135deg,#4f46e5,#7c3aed); }
+
+  /* Tab-like category buttons */
+  .cat-btn.active { background: #6366f1 !important; color: white !important; border-color: #6366f1 !important; }
+
+  textarea, input[type="text"] { font-family: inherit; }
+
+  .copied-flash { animation: flash .6s ease; }
+  @keyframes flash { 0% { background-color: #22c55e33; } 100% { background-color: transparent; } }
+</style>
+</head>
+
+<body class="bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-200 antialiased">
+
+<!-- ===================== HEADER ===================== -->
+<header class="sticky top-0 z-50 backdrop-blur bg-white/70 dark:bg-slate-950/70 border-b border-slate-200 dark:border-slate-800">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <a href="#home" class="flex items-center gap-2 font-extrabold text-xl">
+      <span class="text-2xl">⚡</span>
+      <span>Prompt<span class="grad-text">Forge</span></span>
+    </a>
+
+    <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
+      <a href="#home" class="hover:text-brand-500 transition">Home</a>
+      <a href="#tools" class="hover:text-brand-500 transition">Tools</a>
+      <a href="#library" class="hover:text-brand-500 transition">Library</a>
+      <a href="#ai-tester" class="hover:text-brand-500 transition">Live Test</a>
+      <a href="#tips" class="hover:text-brand-500 transition">Tips</a>
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <a href="https://github.com/karanmotamed/ai-prompt-tool-box" target="_blank" rel="noopener"
+         class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="GitHub" aria-label="GitHub repository">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.73.5.98 5.24.98 11.5c0 4.87 3.16 9 7.55 10.46.55.1.75-.24.75-.53 0-.26-.01-1.13-.01-2.05-3.08.6-3.9-.75-4.15-1.44-.14-.36-.75-1.44-1.28-1.74-.44-.23-1.06-.8-.02-.82.98-.01 1.68.9 1.91 1.28 1.12 1.87 2.9 1.34 3.6 1.02.11-.8.44-1.34.8-1.65-2.78-.31-5.7-1.39-5.7-6.17 0-1.36.49-2.48 1.28-3.35-.13-.31-.56-1.58.12-3.3 0 0 1.05-.33 3.44 1.28a11.9 11.9 0 0 1 6.26 0c2.39-1.61 3.44-1.28 3.44-1.28.68 1.72.25 2.99.12 3.3.8.87 1.28 1.98 1.28 3.35 0 4.79-2.93 5.85-5.72 6.16.45.38.85 1.13.85 2.29 0 1.65-.02 2.98-.02 3.39 0 .29.2.64.76.53 4.38-1.46 7.54-5.6 7.54-10.46C23.02 5.24 18.27.5 12 .5Z"/></svg>
+      </a>
+      <button id="darkToggle" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" title="Toggle theme" aria-label="Toggle dark mode">
+        <svg id="iconSun" class="w-5 h-5 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+        <svg id="iconMoon" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+      </button>
+      <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition" aria-label="Open menu">
+        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-800 px-4 py-3 space-y-2 text-sm font-medium">
+    <a href="#home" class="block py-1">Home</a>
+    <a href="#tools" class="block py-1">Tools</a>
+    <a href="#library" class="block py-1">Library</a>
+    <a href="#ai-tester" class="block py-1">Live Test</a>
+    <a href="#tips" class="block py-1">Tips</a>
+  </div>
+</header>
+
+<!-- ===================== HERO ===================== -->
+<section id="home" class="relative overflow-hidden">
+  <div class="blob w-72 h-72 bg-indigo-500/30 -top-10 -left-10 animate-glow"></div>
+  <div class="blob w-96 h-96 bg-fuchsia-500/20 top-20 right-0 animate-glow"></div>
+  <div class="blob w-72 h-72 bg-cyan-400/20 bottom-0 left-1/3 animate-glow"></div>
+
+  <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center">
+    <span class="inline-block mb-5 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-brand-500/10 text-brand-600 dark:text-brand-300 border border-brand-500/30">
+      100% FREE · NO SIGN-UP · WORKS OFFLINE
+    </span>
+    <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight">
+      Your Free <span class="grad-text">AI Prompt Toolbox</span>
+    </h1>
+    <p class="mt-5 text-lg sm:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+      Generate, optimize, and master prompts instantly — no backend, no API keys, no cost.
+    </p>
+    <div class="mt-9 flex flex-col sm:flex-row items-center justify-center gap-4">
+      <a href="#tools" class="w-full sm:w-auto px-7 py-3.5 rounded-xl font-semibold bg-brand-600 hover:bg-brand-500 text-white shadow-lg shadow-brand-600/30 transition">
+        Try Generator
+      </a>
+      <a href="#library" class="w-full sm:w-auto px-7 py-3.5 rounded-xl font-semibold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
+        Browse Library
+      </a>
+    </div>
+
+    <div class="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 text-left max-w-3xl mx-auto">
+      <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <div class="text-2xl font-bold grad-text">29+</div>
+        <div class="text-xs text-slate-500 mt-1">Ready prompts</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <div class="text-2xl font-bold grad-text">4</div>
+        <div class="text-xs text-slate-500 mt-1">Interactive tools</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <div class="text-2xl font-bold grad-text">0$</div>
+        <div class="text-xs text-slate-500 mt-1">Cost, ever</div>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <div class="text-2xl font-bold grad-text">100%</div>
+        <div class="text-xs text-slate-500 mt-1">Client-side</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== TOOLS ===================== -->
+<section id="tools" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+  <div class="text-center mb-12">
+    <h2 class="text-3xl sm:text-4xl font-extrabold">Prompt Engineering Tools</h2>
+    <p class="mt-3 text-slate-600 dark:text-slate-400">Everything you need to craft world-class prompts, right in your browser.</p>
+  </div>
+
+  <!-- Tool tabs -->
+  <div class="flex flex-wrap justify-center gap-2 mb-10" id="toolTabs">
+    <button data-tool="generator" class="tool-tab active px-5 py-2.5 rounded-lg font-medium text-sm bg-brand-600 text-white transition">✨ Generator</button>
+    <button data-tool="optimizer" class="tool-tab px-5 py-2.5 rounded-lg font-medium text-sm bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition">🛠 Optimizer</button>
+    <button data-tool="chain" class="tool-tab px-5 py-2.5 rounded-lg font-medium text-sm bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition">🔗 Chain Builder</button>
+    <button data-tool="random" class="tool-tab px-5 py-2.5 rounded-lg font-medium text-sm bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition">🎲 Random Prompt</button>
+  </div>
+
+  <!-- ===== Prompt Generator ===== -->
+  <div id="panel-generator" class="tool-panel grid lg:grid-cols-2 gap-8">
+    <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      <h3 class="font-bold text-lg mb-5">Describe your task</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium mb-1.5">Task description</label>
+          <textarea id="genTask" rows="3" placeholder="e.g. Write a product description for a wireless charging pad"
+            class="w-full rounded-lg px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5">Target audience</label>
+          <input id="genAudience" type="text" placeholder="e.g. busy tech-savvy professionals"
+            class="w-full rounded-lg px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium mb-1.5">Tone / style</label>
+            <select id="genTone" class="w-full rounded-lg px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+              <option>Professional</option>
+              <option>Friendly &amp; casual</option>
+              <option>Persuasive</option>
+              <option>Witty &amp; humorous</option>
+              <option>Academic</option>
+              <option>Confident &amp; bold</option>
+              <option>Empathetic</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium mb-1.5">Desired length</label>
+            <select id="genLength" class="w-full rounded-lg px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+              <option value="short">Short (~100 words)</option>
+              <option value="medium" selected>Medium (~300 words)</option>
+              <option value="long">Long (~600 words)</option>
+              <option value="detailed">Comprehensive / sectioned</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          <label class="block text-sm font-medium">Add examples?</label>
+          <label class="inline-flex items-center gap-2 cursor-pointer">
+            <input id="genExamples" type="checkbox" checked class="w-4 h-4 accent-brand-600" />
+            <span class="text-sm text-slate-500">Yes, include example instructions</span>
+          </label>
+        </div>
+        <button id="genBtn" class="w-full py-3 rounded-xl font-semibold bg-brand-600 hover:bg-brand-500 text-white transition">
+          Generate Prompt
+        </button>
+      </div>
+    </div>
+
+    <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-lg">Your optimized prompt</h3>
+        <button id="genCopyBtn" class="px-4 py-2 rounded-lg text-sm font-semibold bg-brand-600 hover:bg-brand-500 text-white transition">
+          📋 Copy Prompt
+        </button>
+      </div>
+      <pre id="genOutput" class="flex-1 min-h-[320px] whitespace-pre-wrap text-sm leading-relaxed p-4 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 overflow-auto">Fill out the form and click "Generate Prompt" to see your custom, structured prompt appear here.</pre>
+      <button id="genToChatBtn" class="mt-3 text-sm text-brand-600 dark:text-brand-400 hover:underline text-left">→ Send to Live Tester</button>
+    </div>
+  </div>
+
+  <!-- ===== Prompt Optimizer ===== -->
+  <div id="panel-optimizer" class="tool-panel hidden grid lg:grid-cols-2 gap-8">
+    <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col">
+      <h3 class="font-bold text-lg mb-3">Paste your prompt</h3>
+      <textarea id="optInput" rows="14" placeholder="Paste any existing prompt here to analyze and improve it..."
+        class="flex-1 w-full rounded-lg px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+      <button id="optBtn" class="mt-4 w-full py-3 rounded-xl font-semibold bg-brand-600 hover:bg-brand-500 text-white transition">
+        Optimize Prompt
+      </button>
+    </div>
+    <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-lg">Improved version</h3>
+        <button id="optCopyBtn" class="px-4 py-2 rounded-lg text-sm font-semibold bg-brand-600 hover:bg-brand-500 text-white transition">
+          📋 Copy
+        </button>
+      </div>
+      <div id="optImprovements" class="hidden mb-3 flex flex-wrap gap-1.5"></div>
+      <pre id="optOutput" class="flex-1 min-h-[280px] whitespace-pre-wrap text-sm leading-relaxed p-4 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 overflow-auto">Paste a prompt on the left and click "Optimize Prompt".</pre>
+    </div>
+  </div>
+
+  <!-- ===== Chain Builder ===== -->
+  <div id="panel-chain" class="tool-panel hidden grid lg:grid-cols-2 gap-8">
+    <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-lg">Build your chain</h3>
+        <button id="chainAddBtn" class="px-3 py-1.5 rounded-lg text-sm font-semibold bg-brand-600 hover:bg-brand-500 text-white transition">+ Add Step</button>
+      </div>
+      <div id="chainSteps" class="space-y-3"></div>
+      <button id="chainGenBtn" class="mt-5 w-full py-3 rounded-xl font-semibold bg-brand-600 hover:bg-brand-500 text-white transition">
+        Generate Chained Prompt
+      </button>
+    </div>
+    <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-lg">Chained prompt</h3>
+        <button id="chainCopyBtn" class="px-4 py-2 rounded-lg text-sm font-semibold bg-brand-600 hover:bg-brand-500 text-white transition">
+          📋 Copy
+        </button>
+      </div>
+      <pre id="chainOutput" class="flex-1 min-h-[320px] whitespace-pre-wrap text-sm leading-relaxed p-4 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 overflow-auto">Add a few steps and click "Generate Chained Prompt".</pre>
+    </div>
+  </div>
+
+  <!-- ===== Random Prompt ===== -->
+  <div id="panel-random" class="tool-panel hidden">
+    <div class="max-w-2xl mx-auto text-center p-8 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      <h3 class="font-bold text-lg mb-2">Feeling lucky?</h3>
+      <p class="text-slate-500 text-sm mb-6">Pull a random high-quality prompt straight from the library.</p>
+      <button id="randomBtn" class="px-8 py-3 rounded-xl font-semibold bg-brand-600 hover:bg-brand-500 text-white transition">🎲 Give me a prompt</button>
+
+      <div id="randomResult" class="hidden mt-8 text-left p-5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+        <div class="flex items-center justify-between mb-2">
+          <span id="randomCategory" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-300"></span>
+          <button id="randomCopyBtn" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 hover:bg-brand-500 text-white transition">📋 Copy</button>
+        </div>
+        <h4 id="randomTitle" class="font-bold text-lg mb-2"></h4>
+        <pre id="randomText" class="whitespace-pre-wrap text-sm leading-relaxed text-slate-600 dark:text-slate-400"></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== LIBRARY ===================== -->
+<section id="library" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-200 dark:border-slate-800">
+  <div class="text-center mb-10">
+    <h2 class="text-3xl sm:text-4xl font-extrabold">Prompt Library</h2>
+    <p class="mt-3 text-slate-600 dark:text-slate-400">29+ hand-crafted prompts across every use case.</p>
+  </div>
+
+  <div class="max-w-xl mx-auto mb-6">
+    <input id="librarySearch" type="text" placeholder="Search prompts... (e.g. 'email', 'code review', 'SEO')"
+      class="w-full rounded-xl px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+  </div>
+
+  <div id="categoryFilters" class="flex flex-wrap justify-center gap-2 mb-10"></div>
+
+  <div id="libraryGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  <p id="libraryEmpty" class="hidden text-center text-slate-500 mt-10">No prompts match your search. Try another keyword or category.</p>
+</section>
+
+<!-- ===================== LIVE AI TESTER (Puter.js, optional) ===================== -->
+<section id="ai-tester" class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-200 dark:border-slate-800">
+  <div class="text-center mb-4">
+    <span class="inline-block mb-3 px-3 py-1 rounded-full text-xs font-semibold bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30">OPTIONAL · REQUIRES INTERNET</span>
+    <h2 class="text-3xl sm:text-4xl font-extrabold">Test Your Prompt Live</h2>
+    <p class="mt-3 text-slate-600 dark:text-slate-400">Powered by <a href="https://puter.com" target="_blank" rel="noopener" class="underline hover:text-brand-500">Puter.js</a> — sign in once, chat for free. Zero cost, no API key needed from you.</p>
+  </div>
+
+  <div class="p-6 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+    <label class="block text-sm font-medium mb-1.5">System prompt (from your generator/optimizer, or write your own)</label>
+    <textarea id="chatSystemPrompt" rows="3" placeholder="Paste the prompt you want to test as context for the AI..."
+      class="w-full rounded-lg px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500"></textarea>
+
+    <div id="chatWindow" class="mt-4 h-80 overflow-y-auto rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-4 space-y-3">
+      <div class="text-sm text-slate-500 text-center py-10">💬 Your conversation will appear here. Type a message below to start.</div>
+    </div>
+
+    <div class="mt-4 flex gap-2">
+      <input id="chatInput" type="text" placeholder="Type your message..."
+        class="flex-1 rounded-lg px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500" />
+      <button id="chatSendBtn" class="px-5 py-2.5 rounded-lg font-semibold bg-brand-600 hover:bg-brand-500 text-white transition whitespace-nowrap">Send</button>
+      <button id="chatClearBtn" class="px-4 py-2.5 rounded-lg font-semibold bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition whitespace-nowrap">Clear</button>
+    </div>
+    <p id="chatStatus" class="mt-2 text-xs text-slate-500"></p>
+  </div>
+</section>
+
+<!-- ===================== TIPS ===================== -->
+<section id="tips" class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-20 border-t border-slate-200 dark:border-slate-800">
+  <div class="text-center mb-10">
+    <h2 class="text-3xl sm:text-4xl font-extrabold">Tips &amp; Best Practices</h2>
+    <p class="mt-3 text-slate-600 dark:text-slate-400">Battle-tested advice for getting the best results from any AI model.</p>
+  </div>
+  <div id="accordion" class="space-y-3"></div>
+</section>
+
+<!-- ===================== FOOTER ===================== -->
+<footer class="border-t border-slate-200 dark:border-slate-800 py-10">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+    <div class="flex items-center gap-2 font-bold text-slate-700 dark:text-slate-300">
+      <span>⚡</span><span>PromptForge</span>
+    </div>
+    <p>100% free · No tracking · No backend · Built for prompt engineers.</p>
+    <a href="https://github.com/karanmotamed/ai-prompt-tool-box" target="_blank" rel="noopener" class="hover:text-brand-500 transition">View on GitHub</a>
+  </div>
+</footer>
+
+<!-- Toast -->
+<div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] px-5 py-3 rounded-xl bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 font-medium text-sm shadow-2xl opacity-0 pointer-events-none translate-y-3">
+  Copied to clipboard!
+</div>
+
+<!-- Optional: Puter.js for the Live AI Tester only. Everything else works fully offline. -->
+<script src="https://js.puter.com/v2/"></script>
+
+<script>
+/* =========================================================================
+   PROMPTFORGE — vanilla JS, no build step, no backend.
+   Sections: state/utils, dark mode, mobile nav, tabs, generator, optimizer,
+   chain builder, random prompt, library data + render + filters, accordion,
+   puter.js live chat.
+   ========================================================================= */
+
+/* ---------------------------- Utilities --------------------------------- */
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.remove('opacity-0', 'translate-y-3');
+  toast.classList.add('opacity-100', 'translate-y-0');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => {
+    toast.classList.add('opacity-0', 'translate-y-3');
+    toast.classList.remove('opacity-100', 'translate-y-0');
+  }, 1800);
+}
+
+async function copyText(text, successMsg) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (e) {
+    // Fallback for older browsers / non-secure contexts
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+  showToast(successMsg || 'Copied to clipboard!');
+}
+
+/* ---------------------------- Dark mode --------------------------------- */
+
+function initDarkMode() {
+  const root = document.documentElement;
+  const iconSun = document.getElementById('iconSun');
+  const iconMoon = document.getElementById('iconMoon');
+  const saved = localStorage.getItem('pf-theme');
+  const isDark = saved ? saved === 'dark' : true; // dark by default
+
+  applyTheme(isDark);
+
+  document.getElementById('darkToggle').addEventListener('click', () => {
+    const nowDark = !root.classList.contains('dark');
+    applyTheme(nowDark);
+    localStorage.setItem('pf-theme', nowDark ? 'dark' : 'light');
+  });
+
+  function applyTheme(dark) {
+    root.classList.toggle('dark', dark);
+    iconSun.classList.toggle('hidden', !dark);
+    iconMoon.classList.toggle('hidden', dark);
+  }
+}
+
+/* ---------------------------- Mobile nav --------------------------------- */
+
+function initMobileNav() {
+  const btn = document.getElementById('mobileMenuBtn');
+  const menu = document.getElementById('mobileMenu');
+  btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+  menu.querySelectorAll('a').forEach(a => a.addEventListener('click', () => menu.classList.add('hidden')));
+}
+
+/* ---------------------------- Tool tabs --------------------------------- */
+
+function initToolTabs() {
+  const tabs = document.querySelectorAll('.tool-tab');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => {
+        t.classList.remove('active', 'bg-brand-600', 'text-white');
+        t.classList.add('bg-slate-100', 'dark:bg-slate-800');
+      });
+      tab.classList.add('active', 'bg-brand-600', 'text-white');
+      tab.classList.remove('bg-slate-100', 'dark:bg-slate-800');
+
+      document.querySelectorAll('.tool-panel').forEach(p => p.classList.add('hidden'));
+      document.getElementById('panel-' + tab.dataset.tool).classList.remove('hidden');
+    });
+  });
+}
+
+/* ============================================================
+   PROMPT GENERATOR — builds a structured, optimized prompt
+   from simple form inputs using smart JS templates.
+   ============================================================ */
+
+const LENGTH_MAP = {
+  short: 'short and concise (around 100 words)',
+  medium: 'a medium length (around 250-350 words)',
+  long: 'thorough and detailed (around 500-700 words)',
+  detailed: 'comprehensive, organized into clear sections with headings and sub-points',
+};
+
+function buildGeneratedPrompt({ task, audience, tone, length, examples }) {
+  const lengthDesc = LENGTH_MAP[length] || LENGTH_MAP.medium;
+  const audienceLine = audience
+    ? `Write specifically for: ${audience}. Adjust vocabulary, complexity, and assumed background knowledge to suit this audience.`
+    : `Assume a general, intelligent audience unless the task implies otherwise.`;
+
+  const lines = [];
+  lines.push('### ROLE');
+  lines.push('You are a world-class expert assistant with deep, practical expertise relevant to the task below. Respond with authority, clarity, and precision.');
+  lines.push('');
+  lines.push('### TASK');
+  lines.push(task || '[Describe the task here]');
+  lines.push('');
+  lines.push('### AUDIENCE');
+  lines.push(audienceLine);
+  lines.push('');
+  lines.push('### TONE & STYLE');
+  lines.push(`Use a ${tone.toLowerCase()} tone throughout. Keep the voice consistent from start to finish.`);
+  lines.push('');
+  lines.push('### LENGTH & FORMAT');
+  lines.push(`Target length: ${lengthDesc}. Use headings, bullet points, or numbered lists where they improve readability.`);
+
+  if (examples) {
+    lines.push('');
+    lines.push('### EXAMPLES');
+    lines.push('Include at least 1-2 concrete, realistic examples that directly illustrate the key points. Make examples specific rather than generic.');
+  }
+
+  lines.push('');
+  lines.push('### OUTPUT INSTRUCTIONS');
+  lines.push('- Think through the problem step by step before answering, but present only the final, polished output (not your raw reasoning) unless explicitly asked to show your work.');
+  lines.push('- Avoid filler, disclaimers, and repetition.');
+  lines.push('- If any part of this request is ambiguous, state your assumptions in one short line at the top, then proceed.');
+
+  return lines.join('\n');
+}
+
+function initGenerator() {
+  const btn = document.getElementById('genBtn');
+  const output = document.getElementById('genOutput');
+  const copyBtn = document.getElementById('genCopyBtn');
+  const toChatBtn = document.getElementById('genToChatBtn');
+
+  btn.addEventListener('click', () => {
+    const task = document.getElementById('genTask').value.trim();
+    const audience = document.getElementById('genAudience').value.trim();
+    const tone = document.getElementById('genTone').value;
+    const length = document.getElementById('genLength').value;
+    const examples = document.getElementById('genExamples').checked;
+
+    if (!task) {
+      showToast('Please describe the task first.');
+      document.getElementById('genTask').focus();
+      return;
+    }
+
+    const prompt = buildGeneratedPrompt({ task, audience, tone, length, examples });
+    output.textContent = prompt;
+    output.classList.add('copied-flash');
+    setTimeout(() => output.classList.remove('copied-flash'), 600);
+  });
+
+  copyBtn.addEventListener('click', () => {
+    const text = output.textContent.trim();
+    if (!text || text.startsWith('Fill out')) {
+      showToast('Generate a prompt first.');
+      return;
+    }
+    copyText(text, 'Prompt copied!');
+  });
+
+  toChatBtn.addEventListener('click', () => {
+    const text = output.textContent.trim();
+    if (!text || text.startsWith('Fill out')) {
+      showToast('Generate a prompt first.');
+      return;
+    }
+    document.getElementById('chatSystemPrompt').value = text;
+    document.getElementById('ai-tester').scrollIntoView({ behavior: 'smooth' });
+  });
+}
+
+/* ============================================================
+   PROMPT OPTIMIZER — analyzes pasted prompt text and adds
+   role framing, structure, chain-of-thought & examples if missing.
+   ============================================================ */
+
+function optimizePrompt(raw) {
+  const improvements = [];
+  const text = raw.trim();
+
+  const hasRole = /\b(you are|act as|as an expert|as a)\b/i.test(text);
+  const hasStepByStep = /(step[- ]by[- ]step|chain of thought|think (it )?through)/i.test(text);
+  const hasExamples = /\bexample/i.test(text);
+  const hasFormat = /(format|structure|bullet|markdown|heading|section)/i.test(text);
+  const hasAudience = /(audience|reader|for (a|an)\b)/i.test(text);
+  const hasConstraints = /(avoid|do not|don't|must not|constraint|limit)/i.test(text);
+
+  const parts = [];
+
+  if (!hasRole) {
+    parts.push('You are a highly skilled, detail-oriented expert assistant. Approach this task with rigor and clarity.');
+    improvements.push('Added expert role framing');
+  }
+
+  parts.push(text);
+
+  const extras = [];
+  if (!hasAudience) {
+    extras.push('- Write for a general but intelligent audience unless stated otherwise; explain any necessary jargon briefly.');
+    improvements.push('Added audience guidance');
+  }
+  if (!hasFormat) {
+    extras.push('- Structure the response with clear headings, short paragraphs, and bullet points where helpful.');
+    improvements.push('Added formatting instructions');
+  }
+  if (!hasExamples) {
+    extras.push('- Include at least one concrete, realistic example to illustrate your answer.');
+    improvements.push('Added request for examples');
+  }
+  if (!hasStepByStep) {
+    extras.push('- Reason through the problem step by step internally before answering, but show only the final result unless asked to show reasoning.');
+    improvements.push('Added chain-of-thought instruction');
+  }
+  if (!hasConstraints) {
+    extras.push('- Avoid unnecessary filler, hedging, or repetition. Be direct and specific.');
+    improvements.push('Added conciseness constraint');
+  }
+
+  if (extras.length) {
+    parts.push('\n### ADDITIONAL INSTRUCTIONS');
+    parts.push(extras.join('\n'));
+  }
+
+  if (improvements.length === 0) {
+    improvements.push('Your prompt already covers the essentials — nice work!');
+  }
+
+  return { improved: parts.join('\n'), improvements };
+}
+
+function initOptimizer() {
+  const btn = document.getElementById('optBtn');
+  const input = document.getElementById('optInput');
+  const output = document.getElementById('optOutput');
+  const copyBtn = document.getElementById('optCopyBtn');
+  const improvementsBox = document.getElementById('optImprovements');
+
+  btn.addEventListener('click', () => {
+    const raw = input.value.trim();
+    if (!raw) {
+      showToast('Paste a prompt first.');
+      input.focus();
+      return;
+    }
+    const { improved, improvements } = optimizePrompt(raw);
+    output.textContent = improved;
+
+    improvementsBox.innerHTML = '';
+    improvements.forEach(tag => {
+      const span = document.createElement('span');
+      span.className = 'text-xs px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30';
+      span.textContent = '✓ ' + tag;
+      improvementsBox.appendChild(span);
+    });
+    improvementsBox.classList.remove('hidden');
+  });
+
+  copyBtn.addEventListener('click', () => {
+    const text = output.textContent.trim();
+    if (!text || text.startsWith('Paste a prompt')) {
+      showToast('Optimize a prompt first.');
+      return;
+    }
+    copyText(text, 'Improved prompt copied!');
+  });
+}
+
+/* ============================================================
+   PROMPT CHAIN BUILDER — add multiple steps, generate a
+   multi-step chain-of-thought prompt.
+   ============================================================ */
+
+let chainStepCount = 0;
+
+function addChainStep(prefill) {
+  chainStepCount++;
+  const wrap = document.createElement('div');
+  wrap.className = 'flex items-start gap-2 chain-step';
+  wrap.innerHTML = `
+    <span class="mt-2.5 shrink-0 w-6 h-6 rounded-full bg-brand-600 text-white text-xs font-bold flex items-center justify-center">${chainStepCount}</span>
+    <textarea rows="2" placeholder="Describe step ${chainStepCount}..."
+      class="chain-step-input flex-1 rounded-lg px-3 py-2 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm">${prefill || ''}</textarea>
+    <button class="chain-remove-btn mt-1 shrink-0 p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition" title="Remove step">
+      <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  `;
+  wrap.querySelector('.chain-remove-btn').addEventListener('click', () => {
+    wrap.remove();
+    renumberChainSteps();
+  });
+  document.getElementById('chainSteps').appendChild(wrap);
+}
+
+function renumberChainSteps() {
+  const steps = document.querySelectorAll('#chainSteps .chain-step');
+  chainStepCount = steps.length;
+  steps.forEach((step, i) => {
+    step.querySelector('span').textContent = i + 1;
+  });
+}
+
+function buildChainPrompt(steps) {
+  const lines = [];
+  lines.push('Complete the following multi-step task. Work through each step in order, using the result of each prior step as context for the next. Clearly label each step\'s output before moving on.');
+  lines.push('');
+  steps.forEach((s, i) => {
+    lines.push(`STEP ${i + 1}: ${s}`);
+  });
+  lines.push('');
+  lines.push('After completing all steps, provide a concise final summary that ties the results together into one coherent output.');
+  return lines.join('\n');
+}
+
+function initChainBuilder() {
+  const addBtn = document.getElementById('chainAddBtn');
+  const genBtn = document.getElementById('chainGenBtn');
+  const output = document.getElementById('chainOutput');
+  const copyBtn = document.getElementById('chainCopyBtn');
+
+  // Start with 2 steps prefilled as a helpful example
+  addChainStep('Research and summarize the key facts about the topic');
+  addChainStep('Draft an outline based on the research');
+
+  addBtn.addEventListener('click', () => addChainStep());
+
+  genBtn.addEventListener('click', () => {
+    const inputs = document.querySelectorAll('.chain-step-input');
+    const steps = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+    if (steps.length < 2) {
+      showToast('Add at least 2 steps.');
+      return;
+    }
+    output.textContent = buildChainPrompt(steps);
+  });
+
+  copyBtn.addEventListener('click', () => {
+    const text = output.textContent.trim();
+    if (!text || text.startsWith('Add a few steps')) {
+      showToast('Generate a chain first.');
+      return;
+    }
+    copyText(text, 'Chained prompt copied!');
+  });
+}
+
+/* ============================================================
+   PROMPT LIBRARY — 29+ real, ready-to-use prompts.
+   ============================================================ */
+
+const PROMPT_LIBRARY = [
+  // ---------------- CODING ----------------
+  {
+    title: 'Senior Code Reviewer',
+    category: 'Coding',
+    desc: 'Get a thorough, constructive review of any code snippet.',
+    prompt: `You are a senior software engineer performing a code review. Review the following code for:
+1. Correctness and edge-case bugs
+2. Readability and naming
+3. Performance issues
+4. Security vulnerabilities
+5. Adherence to best practices for the language/framework used
+
+For each issue found, explain WHY it matters and show a corrected code snippet. End with an overall quality score out of 10.
+
+CODE:
+[paste your code here]`,
+  },
+  {
+    title: 'Bug Hunter',
+    category: 'Coding',
+    desc: 'Diagnose a bug from an error message or stack trace.',
+    prompt: `You are an expert debugger. I will give you an error message/stack trace and the relevant code. Your job:
+1. Explain the root cause in plain language
+2. Point to the exact line(s) responsible
+3. Provide a minimal, tested fix
+4. Suggest one way to prevent this class of bug in the future
+
+ERROR / STACK TRACE:
+[paste here]
+
+RELEVANT CODE:
+[paste here]`,
+  },
+  {
+    title: 'Refactor Assistant',
+    category: 'Coding',
+    desc: 'Improve readability and performance without changing behavior.',
+    prompt: `Refactor the following code to improve readability, maintainability, and performance WITHOUT changing its external behavior. Keep the same function signatures unless there's a strong reason to change them (explain if so). List each change you made and why.
+
+CODE:
+[paste your code here]`,
+  },
+  {
+    title: 'Algorithm Explainer',
+    category: 'Coding',
+    desc: 'Understand any algorithm with complexity analysis and examples.',
+    prompt: `Explain the [algorithm/data structure name] as if teaching a capable junior developer. Include:
+1. The core idea in one paragraph
+2. Step-by-step walkthrough with a small concrete example
+3. Time and space complexity (best/average/worst case)
+4. A clean, well-commented code implementation
+5. When to use it vs. alternatives`,
+  },
+  {
+    title: 'Unit Test Generator',
+    category: 'Coding',
+    desc: 'Generate comprehensive unit tests for a function.',
+    prompt: `Write comprehensive unit tests for the function below. Cover: typical inputs, edge cases (empty/null/boundary values), and invalid inputs that should raise errors. Use [testing framework, e.g. Jest/pytest] and follow the arrange-act-assert pattern. Briefly comment what each test verifies.
+
+FUNCTION:
+[paste your function here]`,
+  },
+
+  // ---------------- WRITING ----------------
+  {
+    title: 'Blog Post Outliner',
+    category: 'Writing',
+    desc: 'Turn a topic into a structured, SEO-friendly outline.',
+    prompt: `Create a detailed blog post outline on the topic: "[your topic]".
+Target audience: [describe audience]
+Include:
+1. Three headline options
+2. A hook for the introduction
+3. 5-7 H2 sections with 2-3 bullet points each covering what to include
+4. A conclusion with a call-to-action
+5. Suggested internal/external link opportunities`,
+  },
+  {
+    title: 'Email Polisher',
+    category: 'Writing',
+    desc: 'Rewrite any email to be clear, professional, and concise.',
+    prompt: `Rewrite the email below to be clear, professional, and concise while preserving the original intent and key details. Fix tone issues, remove filler, and make the call-to-action obvious. Provide the final version only, followed by a one-line summary of what you changed.
+
+ORIGINAL EMAIL:
+[paste your email here]`,
+  },
+  {
+    title: 'Story Starter',
+    category: 'Writing',
+    desc: 'Get a vivid, original opening for a piece of fiction.',
+    prompt: `Write a compelling opening scene (250-350 words) for a story in the [genre] genre. Setting: [describe setting]. Protagonist: [brief description]. The opening should hook the reader immediately, establish voice and atmosphere, and end on a small but intriguing question or tension.`,
+  },
+  {
+    title: 'Resume Bullet Rewriter',
+    category: 'Writing',
+    desc: 'Turn vague duties into impact-driven resume bullets.',
+    prompt: `Rewrite the following resume bullet points using strong action verbs and quantifiable results (use the "accomplished X as measured by Y by doing Z" pattern where possible). Keep each bullet to one line. If a number isn't provided, suggest a placeholder like "[X%]" rather than inventing a fake stat.
+
+BULLETS:
+[paste your bullet points here]`,
+  },
+  {
+    title: 'Essay Feedback Coach',
+    category: 'Writing',
+    desc: 'Get structured, actionable feedback on an essay draft.',
+    prompt: `Act as a writing coach. Review the essay below and provide feedback on:
+1. Thesis clarity and argument strength
+2. Structure and paragraph flow
+3. Evidence and examples used
+4. Sentence-level clarity and word choice
+5. Three specific, prioritized suggestions to improve the next draft
+
+ESSAY:
+[paste your essay here]`,
+  },
+
+  // ---------------- BUSINESS ----------------
+  {
+    title: 'SWOT Analysis Generator',
+    category: 'Business',
+    desc: 'Produce a structured SWOT analysis for any business idea.',
+    prompt: `Perform a detailed SWOT analysis for the following business/product: "[describe your business or idea]".
+Provide 4-6 specific, non-generic points under each of: Strengths, Weaknesses, Opportunities, Threats. Conclude with the single most important strategic recommendation based on this analysis.`,
+  },
+  {
+    title: 'Meeting Agenda Builder',
+    category: 'Business',
+    desc: 'Turn a meeting goal into a tight, time-boxed agenda.',
+    prompt: `Create a meeting agenda for a [duration]-minute meeting with the goal of: "[meeting goal]". Attendees: [list roles].
+Include: objective statement, time-boxed agenda items with owners, pre-read/prep needed, and explicit desired outcomes/decisions for each item. Keep it realistic for the time available.`,
+  },
+  {
+    title: 'Negotiation Strategy Advisor',
+    category: 'Business',
+    desc: 'Prepare talking points and fallback positions for a negotiation.',
+    prompt: `I'm preparing to negotiate: "[describe the negotiation, e.g. salary, vendor contract, partnership terms]".
+My goals: [list]. My constraints: [list]. What I know about the other side: [describe].
+Provide: 1) my strongest opening position, 2) 3 likely objections and how to respond, 3) a BATNA-informed walk-away point, 4) a concession strategy that protects my priorities.`,
+  },
+  {
+    title: 'Business Plan Summarizer',
+    category: 'Business',
+    desc: 'Condense a long business plan into a crisp executive summary.',
+    prompt: `Summarize the business plan below into a one-page executive summary covering: problem, solution, market size, business model, competitive advantage, traction/milestones, and the ask. Keep it under 400 words and written for a busy investor skimming quickly.
+
+BUSINESS PLAN:
+[paste your plan here]`,
+  },
+
+  // ---------------- MARKETING ----------------
+  {
+    title: 'Ad Copy Generator',
+    category: 'Marketing',
+    desc: 'Generate multiple ad copy variations for A/B testing.',
+    prompt: `Write 5 distinct ad copy variations for [platform, e.g. Google Ads/Instagram] promoting: "[product/service]".
+Target audience: [describe]. Key benefit to emphasize: [benefit].
+For each variation include: headline (max 30 chars if applicable), body copy, and call-to-action. Vary the emotional angle across the 5 (urgency, curiosity, social proof, benefit-driven, humor).`,
+  },
+  {
+    title: 'Social Media Caption Pack',
+    category: 'Marketing',
+    desc: 'Get a week of on-brand social captions in one go.',
+    prompt: `Generate 7 social media captions (one per day) for [platform] promoting "[topic/product]" for a brand with this voice: [describe brand voice].
+Each caption should include: the caption text, 3-5 relevant hashtags, and a suggested content type (photo/video/carousel/etc). Vary the format (question, tip, behind-the-scenes, testimonial, promo, story, poll).`,
+  },
+  {
+    title: 'SEO Meta Description Writer',
+    category: 'Marketing',
+    desc: 'Write compelling, click-worthy meta descriptions.',
+    prompt: `Write 3 SEO meta description options (max 155 characters each) for a page about: "[page topic]". Target keyword to naturally include: "[keyword]". Each should be compelling, accurately describe the content, and include a subtle call-to-action.`,
+  },
+  {
+    title: 'Product Launch Announcement',
+    category: 'Marketing',
+    desc: 'Draft a launch announcement for multiple channels.',
+    prompt: `Write a product launch announcement for "[product name]" — [one-line description]. Key features: [list 3]. Target audience: [describe].
+Provide three versions: 1) a press-release style paragraph, 2) a short email announcement with subject line, 3) a punchy social media post. Emphasize the core benefit, not just features.`,
+  },
+
+  // ---------------- CREATIVE ----------------
+  {
+    title: 'World-Building Assistant',
+    category: 'Creative',
+    desc: 'Flesh out a fictional world with rich, consistent detail.',
+    prompt: `Help me build a fictional world for a [genre, e.g. fantasy/sci-fi] story. Core concept: "[one-line concept]".
+Develop: 1) geography and key locations, 2) a magic/technology system with clear rules and limitations, 3) a brief history with 2-3 major turning points, 4) the dominant cultures/factions and their tensions. Keep everything internally consistent and avoid generic tropes where possible.`,
+  },
+  {
+    title: 'Song Lyrics Brainstormer',
+    category: 'Creative',
+    desc: 'Get lyric ideas and structure for an original song.',
+    prompt: `Brainstorm lyrics for a [genre] song about "[theme/emotion]". Mood: [describe].
+Provide: a title, a chorus (4 lines) that captures the central hook, two verse options (4-6 lines each), and one suggested bridge idea. Favor concrete imagery over cliché phrases.`,
+  },
+  {
+    title: 'Character Backstory Generator',
+    category: 'Creative',
+    desc: 'Create a deep, motivation-driven character backstory.',
+    prompt: `Create a rich backstory for a character with this brief: "[role/archetype, e.g. reluctant mentor, morally-grey antagonist]" in a [genre] setting.
+Include: formative childhood event, core wound/fear, core desire, one closely-held secret, and how these combine to explain their present-day behavior and flaws. Make the psychology consistent and avoid making them a flawless hero or a cartoonish villain.`,
+  },
+  {
+    title: 'Poem Writer',
+    category: 'Creative',
+    desc: 'Generate an original poem in a specific style and form.',
+    prompt: `Write a poem about "[subject]" in the style of [poetic form, e.g. free verse/sonnet/haiku sequence]. Tone: [describe, e.g. wistful, triumphant, melancholic]. Favor specific sensory imagery over abstract statements, and avoid forced rhymes if the form doesn't require them.`,
+  },
+
+  // ---------------- RESEARCH ----------------
+  {
+    title: 'Literature Review Summarizer',
+    category: 'Research',
+    desc: 'Synthesize multiple sources into a coherent review.',
+    prompt: `Summarize and synthesize the following sources into a mini literature review on the topic of "[topic]". For each source, identify its main claim and methodology. Then write a synthesis paragraph identifying areas of agreement, disagreement, and gaps in the current research.
+
+SOURCES:
+[paste summaries/abstracts here]`,
+  },
+  {
+    title: 'Research Question Refiner',
+    category: 'Research',
+    desc: 'Sharpen a vague research idea into a testable question.',
+    prompt: `I have a rough research idea: "[describe your idea]". Help me refine it into 3 well-scoped, testable research questions. For each, note: the variables involved, a feasible method to investigate it, and one potential confound or limitation to watch for.`,
+  },
+  {
+    title: 'Data Interpretation Assistant',
+    category: 'Research',
+    desc: 'Turn raw data/results into clear findings and implications.',
+    prompt: `I'm going to share some data/results. Help me interpret them by identifying: 1) the key patterns or trends, 2) any surprising or counter-intuitive findings, 3) plausible explanations for those findings, 4) practical implications, and 5) caveats or limitations I should mention when presenting this.
+
+DATA / RESULTS:
+[paste or describe your data here]`,
+  },
+  {
+    title: 'Pros & Cons Analyzer',
+    category: 'Research',
+    desc: 'Get a balanced, structured analysis of a decision.',
+    prompt: `Analyze the decision: "[describe the decision, e.g. adopting microservices vs. monolith]".
+List the top 5 pros and top 5 cons, weighted by impact (high/medium/low). Then give a balanced recommendation based on the context: "[describe your specific constraints/priorities]".`,
+  },
+
+  // ---------------- PRODUCTIVITY ----------------
+  {
+    title: 'Daily Planner Assistant',
+    category: 'Productivity',
+    desc: 'Turn a messy task list into a realistic, prioritized day plan.',
+    prompt: `Here is my raw task list for today: "[paste tasks]". My working hours are [start-end] and I have these fixed commitments: [list meetings/events].
+Organize this into a realistic time-blocked schedule, prioritizing by urgency and impact (not just order listed). Flag anything that looks unrealistic to fit today and suggest what to defer.`,
+  },
+  {
+    title: 'Goal Breakdown Coach',
+    category: 'Productivity',
+    desc: 'Break an ambitious goal into a concrete action plan.',
+    prompt: `Help me break down this goal: "[describe your goal]" with a target timeline of [timeframe].
+Provide: 1) 3-5 major milestones with rough dates, 2) the first 3 concrete actions I should take this week, 3) one likely obstacle and how to plan around it, 4) a simple way to track progress.`,
+  },
+  {
+    title: 'Decision-Making Framework',
+    category: 'Productivity',
+    desc: 'Apply a structured framework to a tough decision.',
+    prompt: `I need to decide between these options: "[list your options]" for the situation: "[describe context/constraints]".
+Walk me through this using a structured framework: define the real decision criteria, score each option against those criteria, surface any information gaps, and give a clear recommendation with your reasoning made explicit.`,
+  },
+];
+
+function renderCategoryFilters() {
+  const container = document.getElementById('categoryFilters');
+  const categories = ['All', ...new Set(PROMPT_LIBRARY.map(p => p.category))];
+  container.innerHTML = '';
+  categories.forEach((cat, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-btn px-4 py-2 rounded-full text-sm font-medium border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-brand-500 transition' + (i === 0 ? ' active' : '');
+    btn.textContent = cat;
+    btn.dataset.category = cat;
+    if (i === 0) { btn.style.background = '#6366f1'; btn.style.color = 'white'; btn.style.borderColor = '#6366f1'; }
+    btn.addEventListener('click', () => {
+      container.querySelectorAll('.cat-btn').forEach(b => {
+        b.classList.remove('active');
+        b.style.background = '';
+        b.style.color = '';
+        b.style.borderColor = '';
+      });
+      btn.classList.add('active');
+      btn.style.background = '#6366f1';
+      btn.style.color = 'white';
+      btn.style.borderColor = '#6366f1';
+      renderLibrary();
+    });
+    container.appendChild(btn);
+  });
+}
+
+function getActiveCategory() {
+  const active = document.querySelector('#categoryFilters .cat-btn.active');
+  return active ? active.dataset.category : 'All';
+}
+
+function renderLibrary() {
+  const grid = document.getElementById('libraryGrid');
+  const empty = document.getElementById('libraryEmpty');
+  const query = document.getElementById('librarySearch').value.trim().toLowerCase();
+  const category = getActiveCategory();
+
+  const filtered = PROMPT_LIBRARY.filter(p => {
+    const matchesCategory = category === 'All' || p.category === category;
+    const matchesQuery = !query ||
+      p.title.toLowerCase().includes(query) ||
+      p.desc.toLowerCase().includes(query) ||
+      p.prompt.toLowerCase().includes(query) ||
+      p.category.toLowerCase().includes(query);
+    return matchesCategory && matchesQuery;
+  });
+
+  grid.innerHTML = '';
+  empty.classList.toggle('hidden', filtered.length > 0);
+
+  filtered.forEach((p, idx) => {
+    const card = document.createElement('div');
+    card.className = 'lift animate-fade-in p-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col';
+    card.innerHTML = `
+      <span class="self-start text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-300 mb-3">${p.category}</span>
+      <h3 class="font-bold text-lg mb-1.5">${p.title}</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400 mb-4 flex-1">${p.desc}</p>
+      <div class="flex gap-2">
+        <button class="view-btn flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 transition">View</button>
+        <button class="copy-btn flex-1 px-3 py-2 rounded-lg text-sm font-semibold bg-brand-600 hover:bg-brand-500 text-white transition">📋 Copy</button>
+      </div>
+    `;
+    card.querySelector('.copy-btn').addEventListener('click', () => copyText(p.prompt, `"${p.title}" copied!`));
+    card.querySelector('.view-btn').addEventListener('click', () => openLibraryModal(p));
+    grid.appendChild(card);
+  });
+}
+
+function openLibraryModal(p) {
+  let modal = document.getElementById('libraryModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'libraryModal';
+    modal.className = 'fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/60';
+    modal.innerHTML = `
+      <div class="max-w-xl w-full max-h-[80vh] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 flex flex-col">
+        <div class="flex items-start justify-between mb-3">
+          <div>
+            <span id="modalCategory" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-brand-500/10 text-brand-600 dark:text-brand-300"></span>
+            <h3 id="modalTitle" class="font-bold text-xl mt-2"></h3>
+          </div>
+          <button id="modalCloseBtn" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <pre id="modalText" class="flex-1 overflow-auto whitespace-pre-wrap text-sm leading-relaxed p-4 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800"></pre>
+        <button id="modalCopyBtn" class="mt-4 w-full py-3 rounded-xl font-semibold bg-brand-600 hover:bg-brand-500 text-white transition">📋 Copy Prompt</button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+    modal.querySelector('#modalCloseBtn').addEventListener('click', () => modal.remove());
+  }
+  modal.querySelector('#modalCategory').textContent = p.category;
+  modal.querySelector('#modalTitle').textContent = p.title;
+  modal.querySelector('#modalText').textContent = p.prompt;
+  modal.querySelector('#modalCopyBtn').onclick = () => copyText(p.prompt, `"${p.title}" copied!`);
+}
+
+function initLibrary() {
+  renderCategoryFilters();
+  renderLibrary();
+  document.getElementById('librarySearch').addEventListener('input', renderLibrary);
+}
+
+/* ---------------------------- Random Prompt --------------------------------- */
+
+function initRandomPrompt() {
+  const btn = document.getElementById('randomBtn');
+  const result = document.getElementById('randomResult');
+  const copyBtn = document.getElementById('randomCopyBtn');
+  let current = null;
+
+  btn.addEventListener('click', () => {
+    current = PROMPT_LIBRARY[Math.floor(Math.random() * PROMPT_LIBRARY.length)];
+    document.getElementById('randomCategory').textContent = current.category;
+    document.getElementById('randomTitle').textContent = current.title;
+    document.getElementById('randomText').textContent = current.prompt;
+    result.classList.remove('hidden');
+    result.classList.add('animate-fade-in');
+  });
+
+  copyBtn.addEventListener('click', () => {
+    if (!current) return;
+    copyText(current.prompt, `"${current.title}" copied!`);
+  });
+}
+
+/* ============================================================
+   TIPS & BEST PRACTICES ACCORDION
+   ============================================================ */
+
+const TIPS = [
+  {
+    q: 'Be specific about the output format',
+    a: 'Tell the AI exactly how you want the answer structured — bullet points, a table, JSON, a specific word count, or numbered steps. Vague requests get vague, meandering answers.',
+  },
+  {
+    q: 'Give the model a role',
+    a: 'Starting with "You are an expert [X]..." primes the model to draw on the right vocabulary, assumptions, and level of rigor for that domain.',
+  },
+  {
+    q: 'Show, don\'t just tell (use examples)',
+    a: 'One or two concrete examples of the input/output you want ("few-shot prompting") dramatically improves consistency compared to describing the format in words alone.',
+  },
+  {
+    q: 'Break big tasks into steps (chain-of-thought)',
+    a: 'For anything involving reasoning or multiple stages, ask the model to think step by step, or split the task into an explicit chain of smaller prompts (see the Chain Builder tool above).',
+  },
+  {
+    q: 'State constraints explicitly',
+    a: 'Say what NOT to do: "don\'t use jargon," "don\'t exceed 200 words," "don\'t invent statistics." Models follow explicit negative constraints far more reliably than implied ones.',
+  },
+  {
+    q: 'Iterate — don\'t expect perfection on try one',
+    a: 'Treat the first response as a draft. Ask follow-up questions like "make this more concise" or "add a counterargument" rather than starting over from scratch.',
+  },
+  {
+    q: 'Give context, not just instructions',
+    a: 'Background information — who the audience is, what has already been tried, what the end goal is — helps the model make better judgment calls on ambiguous parts of the task.',
+  },
+  {
+    q: 'Ask the model to flag its own assumptions',
+    a: 'Adding "state any assumptions you make" surfaces misunderstandings early, before you\'ve read through an entire answer built on the wrong premise.',
+  },
+  {
+    q: 'Separate system instructions from user content',
+    a: 'When pasting text to analyze/transform, clearly delimit it (e.g. with a "TEXT:" label or triple quotes) so the model doesn\'t confuse your instructions with the content itself.',
+  },
+];
+
+function renderAccordion() {
+  const container = document.getElementById('accordion');
+  TIPS.forEach((tip, i) => {
+    const item = document.createElement('div');
+    item.className = 'accordion-item rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 overflow-hidden';
+    item.innerHTML = `
+      <button class="accordion-trigger w-full flex items-center justify-between gap-4 px-5 py-4 text-left font-semibold">
+        <span>${i + 1}. ${tip.q}</span>
+        <svg class="chevron w-5 h-5 shrink-0 text-brand-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="accordion-content px-5">
+        <p class="pb-4 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">${tip.a}</p>
+      </div>
+    `;
+    item.querySelector('.accordion-trigger').addEventListener('click', () => {
+      item.classList.toggle('open');
+    });
+    container.appendChild(item);
+  });
+}
+
+/* ============================================================
+   LIVE AI TESTER — optional, powered by Puter.js.
+   Everything above works fully offline; only this section
+   needs internet + a (free) Puter sign-in.
+   ============================================================ */
+
+let chatHistory = [];
+
+function appendMessage(role, content) {
+  const win = document.getElementById('chatWindow');
+  // Remove the placeholder on first message
+  const placeholder = win.querySelector('.text-center');
+  if (placeholder) placeholder.remove();
+
+  const row = document.createElement('div');
+  row.className = 'flex ' + (role === 'user' ? 'justify-end' : 'justify-start');
+
+  const bubble = document.createElement('div');
+  bubble.className = (role === 'user'
+    ? 'msg-user text-white'
+    : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200') +
+    ' max-w-[80%] px-4 py-2.5 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed';
+  bubble.textContent = content;
+
+  row.appendChild(bubble);
+  win.appendChild(row);
+  win.scrollTop = win.scrollHeight;
+  return bubble;
+}
+
+function extractResponseText(response) {
+  // Puter.js can return a plain string or a richer object depending on
+  // version/model, so normalize defensively across the shapes we might get.
+  if (typeof response === 'string') return response;
+  if (!response) return '';
+  if (typeof response.message?.content === 'string') return response.message.content;
+  if (Array.isArray(response.message?.content)) {
+    return response.message.content.map(c => c.text || c).join('');
+  }
+  if (typeof response.text === 'string') return response.text;
+  try { return JSON.stringify(response); } catch { return String(response); }
+}
+
+function initLiveChat() {
+  const sendBtn = document.getElementById('chatSendBtn');
+  const clearBtn = document.getElementById('chatClearBtn');
+  const input = document.getElementById('chatInput');
+  const status = document.getElementById('chatStatus');
+  const systemPromptBox = document.getElementById('chatSystemPrompt');
+
+  const puterAvailable = typeof window.puter !== 'undefined' && window.puter?.ai;
+  if (!puterAvailable) {
+    status.textContent = 'Puter.js failed to load — check your internet connection. Every other tool on this page still works fully offline.';
+  }
+
+  async function send() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    if (typeof window.puter === 'undefined' || !window.puter?.ai) {
+      status.textContent = 'Puter.js is not available right now. Please check your connection and reload the page.';
+      return;
+    }
+
+    appendMessage('user', text);
+    input.value = '';
+    input.disabled = true;
+    sendBtn.disabled = true;
+    status.textContent = 'Thinking...';
+
+    const systemPrompt = systemPromptBox.value.trim();
+    const messages = [];
+    if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+    messages.push(...chatHistory, { role: 'user', content: text });
+
+    try {
+      const response = await window.puter.ai.chat(messages);
+      const reply = extractResponseText(response) || '(empty response)';
+      appendMessage('assistant', reply);
+      chatHistory.push({ role: 'user', content: text });
+      chatHistory.push({ role: 'assistant', content: reply });
+      status.textContent = '';
+    } catch (err) {
+      console.error(err);
+      status.textContent = 'Something went wrong talking to the AI. You may need to sign in to Puter (a free popup will appear) — then try again.';
+      appendMessage('assistant', '⚠️ Error: could not get a response. Please sign in to Puter if prompted, then try again.');
+    } finally {
+      input.disabled = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    chatHistory = [];
+    const win = document.getElementById('chatWindow');
+    win.innerHTML = '<div class="text-sm text-slate-500 text-center py-10">💬 Your conversation will appear here. Type a message below to start.</div>';
+    status.textContent = '';
+  });
+}
+
+/* ---------------------------- Init everything --------------------------------- */
+
+document.addEventListener('DOMContentLoaded', () => {
+  initDarkMode();
+  initMobileNav();
+  initToolTabs();
+  initGenerator();
+  initOptimizer();
+  initChainBuilder();
+  initLibrary();
+  initRandomPrompt();
+  renderAccordion();
+  initLiveChat();
+});
+</script>
+</body>
+</html>

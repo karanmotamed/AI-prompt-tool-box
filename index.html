@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>PromptForge — Free AI Prompt Toolbox</title>
-<meta name="description" content="PromptForge is a 100% free, offline-first toolbox to generate, optimize, chain, and discover great AI prompts." />
+<meta name="description" content="PromptForge is a 100% free toolbox to generate, optimize, chain, and discover great AI prompts." />
 
 <!-- Favicon (inline SVG, no external request) -->
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡</text></svg>" />
@@ -140,7 +140,7 @@
 
   <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-24 text-center">
     <span class="inline-block mb-5 px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide bg-brand-500/10 text-brand-600 dark:text-brand-300 border border-brand-500/30">
-      100% FREE · NO SIGN-UP · WORKS OFFLINE
+      100% FREE · NO SIGN-UP
     </span>
     <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight leading-tight">
       Your Free <span class="grad-text">AI Prompt Toolbox</span>
@@ -208,28 +208,17 @@
           <input id="genAudience" type="text" placeholder="e.g. busy tech-savvy professionals"
             class="w-full rounded-lg px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500" />
         </div>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium mb-1.5">Tone / style</label>
-            <select id="genTone" class="w-full rounded-lg px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
-              <option>Professional</option>
-              <option>Friendly &amp; casual</option>
-              <option>Persuasive</option>
-              <option>Witty &amp; humorous</option>
-              <option>Academic</option>
-              <option>Confident &amp; bold</option>
-              <option>Empathetic</option>
-            </select>
-          </div>
-          <div>
-            <label class="block text-sm font-medium mb-1.5">Desired length</label>
-            <select id="genLength" class="w-full rounded-lg px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
-              <option value="short">Short (~100 words)</option>
-              <option value="medium" selected>Medium (~300 words)</option>
-              <option value="long">Long (~600 words)</option>
-              <option value="detailed">Comprehensive / sectioned</option>
-            </select>
-          </div>
+        <div>
+          <label class="block text-sm font-medium mb-1.5">Tone / style</label>
+          <select id="genTone" class="w-full rounded-lg px-3.5 py-2.5 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <option>Professional</option>
+            <option>Friendly &amp; casual</option>
+            <option>Persuasive</option>
+            <option>Witty &amp; humorous</option>
+            <option>Academic</option>
+            <option>Confident &amp; bold</option>
+            <option>Empathetic</option>
+          </select>
         </div>
         <div class="flex items-center gap-3">
           <label class="block text-sm font-medium">Add examples?</label>
@@ -390,7 +379,7 @@
   Copied to clipboard!
 </div>
 
-<!-- Optional: Puter.js for the Live AI Tester only. Everything else works fully offline. -->
+<!-- Optional: Puter.js for the Live AI Tester only. Every other tool runs entirely client-side, no server calls. -->
 <script src="https://js.puter.com/v2/"></script>
 
 <script>
@@ -489,15 +478,7 @@ function initToolTabs() {
    from simple form inputs using smart JS templates.
    ============================================================ */
 
-const LENGTH_MAP = {
-  short: 'short and concise (around 100 words)',
-  medium: 'a medium length (around 250-350 words)',
-  long: 'thorough and detailed (around 500-700 words)',
-  detailed: 'comprehensive, organized into clear sections with headings and sub-points',
-};
-
-function buildGeneratedPrompt({ task, audience, tone, length, examples }) {
-  const lengthDesc = LENGTH_MAP[length] || LENGTH_MAP.medium;
+function buildGeneratedPrompt({ task, audience, tone, examples }) {
   const audienceLine = audience
     ? `Write specifically for: ${audience}. Adjust vocabulary, complexity, and assumed background knowledge to suit this audience.`
     : `Assume a general, intelligent audience unless the task implies otherwise.`;
@@ -515,8 +496,8 @@ function buildGeneratedPrompt({ task, audience, tone, length, examples }) {
   lines.push('### TONE & STYLE');
   lines.push(`Use a ${tone.toLowerCase()} tone throughout. Keep the voice consistent from start to finish.`);
   lines.push('');
-  lines.push('### LENGTH & FORMAT');
-  lines.push(`Target length: ${lengthDesc}. Use headings, bullet points, or numbered lists where they improve readability.`);
+  lines.push('### FORMAT');
+  lines.push('Use headings, bullet points, or numbered lists where they improve readability.');
 
   if (examples) {
     lines.push('');
@@ -543,7 +524,6 @@ function initGenerator() {
     const task = document.getElementById('genTask').value.trim();
     const audience = document.getElementById('genAudience').value.trim();
     const tone = document.getElementById('genTone').value;
-    const length = document.getElementById('genLength').value;
     const examples = document.getElementById('genExamples').checked;
 
     if (!task) {
@@ -552,7 +532,7 @@ function initGenerator() {
       return;
     }
 
-    const prompt = buildGeneratedPrompt({ task, audience, tone, length, examples });
+    const prompt = buildGeneratedPrompt({ task, audience, tone, examples });
     output.textContent = prompt;
     output.classList.add('copied-flash');
     setTimeout(() => output.classList.remove('copied-flash'), 600);
@@ -1217,8 +1197,8 @@ function renderAccordion() {
 
 /* ============================================================
    LIVE AI TESTER — optional, powered by Puter.js.
-   Everything above works fully offline; only this section
-   needs internet + a (free) Puter sign-in.
+   Everything above runs entirely client-side with no server calls;
+   only this section needs internet + a (free) Puter sign-in.
    ============================================================ */
 
 let chatHistory = [];
@@ -1267,7 +1247,7 @@ function initLiveChat() {
 
   const puterAvailable = typeof window.puter !== 'undefined' && window.puter?.ai;
   if (!puterAvailable) {
-    status.textContent = 'Puter.js failed to load — check your internet connection. Every other tool on this page still works fully offline.';
+    status.textContent = 'Puter.js failed to load — check your internet connection. Every other tool on this page still works fine without it.';
   }
 
   async function send() {
